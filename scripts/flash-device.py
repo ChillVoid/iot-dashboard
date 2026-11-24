@@ -61,6 +61,21 @@ def check_layout(components,table):
     return nvs[0]
 
 
+def esptool_names(tool):
+    """esptool 5 (ESP32 core 3.x) renamed commands and options to hyphens; 4.x (core 2.x)
+    only knows the underscore forms. Pick by the tool's version so both cores work."""
+    version=tool.parent.name if tool.parent.name[:1].isdigit() else ''
+    if not version:
+        result=subprocess.run(([sys.executable,str(tool)] if tool.suffix=='.py' else [str(tool)])+['version'],
+                              capture_output=True,text=True)
+        version=(result.stdout.strip().splitlines() or ['4'])[-1]
+    modern=int(version.split('.')[0] or 4)>=5
+    names={'write_flash':'write-flash','merge_bin':'merge-bin','--flash_mode':'--flash-mode',
+           '--flash_freq':'--flash-freq','--flash_size':'--flash-size','default_reset':'default-reset',
+           'hard_reset':'hard-reset'}
+    return (lambda name: names.get(name,name)) if modern else (lambda name: name)
+
+
 def detect_port(cli):
     result=subprocess.run([cli,'board','list','--format','json'],capture_output=True,text=True,check=True)
     ports=[item['port']['address'] for item in json.loads(result.stdout or '{}').get('detected_ports',[])
@@ -108,10 +123,11 @@ def main():
     if not tool.is_file(): tool=tool_dir/'esptool.py'
     if not tool.is_file(): raise SystemExit('The installed ESP32 esptool is missing.')
     command=[sys.executable,str(tool)] if tool.suffix=='.py' else [str(tool)]
+    n=esptool_names(tool)
     command+=['--chip','esp32','--port',port,'--baud',properties.get('upload.speed','921600'),
-              '--before','default_reset','--after','hard_reset','write_flash','-z',
-              '--flash_mode',properties['build.flash_mode'],'--flash_freq',properties['build.flash_freq'],
-              '--flash_size',properties['build.flash_size']]
+              '--before',n('default_reset'),'--after',n('hard_reset'),n('write_flash'),'-z',
+              n('--flash_mode'),properties['build.flash_mode'],n('--flash_freq'),properties['build.flash_freq'],
+              n('--flash_size'),properties['build.flash_size']]
     for offset,path in components: command+=[offset,str(path)]
     kind='button bridge' if args.bridge else 'self-test' if args.selftest else 'game'
     print(f'Uploading {kind} firmware to {port}…')

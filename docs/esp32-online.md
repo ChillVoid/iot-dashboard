@@ -93,6 +93,8 @@ Local compilation (Arduino CLI, ESP32 core and libraries installed):
 arduino-cli compile --fqbn esp32:esp32:esp32 --output-dir firmware/stack_moko_baby/build firmware/stack_moko_baby
 ```
 
+**Toolchain (25 November 2026):** ESP32 Arduino core **3.3.12** (all event laptops; it replaces 2.0.17), its bundled esptool 5.3.1, Arduino CLI 1.6.0, Adafruit NeoPixel 1.15.5 and ArduinoJson 7.4.3. The button bridge, the LED game firmware and its self-test compile on 3.3.12 with no warnings in our code. The flashing and Wokwi scripts pick esptool's command names by version (hyphenated for esptool 5, underscores for older cores), so a laptop still on 2.0.17 also works. Earlier history follows.
+
 Dependencies used for compilation: Arduino CLI 1.6.0, ArduinoJson 7.4.3 and Adafruit NeoPixel 1.15.5. ESP32 core 4.0.0 compiled, but its HTTPS signature verification triggered the watchdog in the actual Wokwi run. Core 2.0.17 is being checked for simulator compatibility; compilation and network success are separate evidence. Build outputs and private configuration are excluded from Git/Graphify. The free-online helper explicitly merges and verifies the current bootloader, partitions and application because core 2.0.17 does not produce a merged image automatically.
 
 ## Keeping XAMPP and local Ollama online

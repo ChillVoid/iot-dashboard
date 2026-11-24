@@ -15,6 +15,21 @@ import certifi
 from urllib.parse import urlsplit
 
 
+def esptool_names(tool):
+    """esptool 5 (ESP32 core 3.x) renamed commands and options to hyphens; 4.x (core 2.x)
+    only knows the underscore forms. Pick by the tool's version so both cores work."""
+    version=tool.parent.name if tool.parent.name[:1].isdigit() else ''
+    if not version:
+        result=subprocess.run(([sys.executable,str(tool)] if tool.suffix=='.py' else [str(tool)])+['version'],
+                              capture_output=True,text=True)
+        version=(result.stdout.strip().splitlines() or ['4'])[-1]
+    modern=int(version.split('.')[0] or 4)>=5
+    names={'write_flash':'write-flash','merge_bin':'merge-bin','--flash_mode':'--flash-mode',
+           '--flash_freq':'--flash-freq','--flash_size':'--flash-size','default_reset':'default-reset',
+           'hard_reset':'hard-reset'}
+    return (lambda name: names.get(name,name)) if modern else (lambda name: name)
+
+
 def merge_firmware(cli, source, root):
     """Create a fresh full-flash image, including on cores without a merge hook."""
     result=subprocess.run([cli,'compile','--fqbn','esp32:esp32:esp32','--show-properties',str(source)],
@@ -35,10 +50,11 @@ def merge_firmware(cli, source, root):
                 ('0x10000',build/'stack_moko_baby.ino.bin')]
     if not all(path.is_file() for _,path in components):
         raise RuntimeError('The ESP32 build is missing a required flash component.')
-    command+=['--chip','esp32','merge_bin','-o',str(image),
-              '--flash_mode',properties['build.flash_mode'],
-              '--flash_freq',properties['build.flash_freq'],
-              '--flash_size',properties['build.flash_size']]
+    n=esptool_names(tool)
+    command+=['--chip','esp32',n('merge_bin'),'-o',str(image),
+              n('--flash_mode'),properties['build.flash_mode'],
+              n('--flash_freq'),properties['build.flash_freq'],
+              n('--flash_size'),properties['build.flash_size']]
     for offset,path in components: command.extend([offset,str(path)])
     subprocess.run(command,cwd=root,check=True)
     # Check actual constituent bytes, not just the presence of an older image.

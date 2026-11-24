@@ -44,6 +44,8 @@ const xampp = process.env.STACK_XAMPP_DIR || "C:\\xampp";
 const venvPython = join(root, "backend", ".venv", win ? "Scripts/python.exe" : "bin/python");
 const graphifyExe = join(root, ".tools", "graphify-py313", win ? "Scripts/graphify.exe" : "bin/graphify");
 const ESP32_INDEX = "https://espressif.github.io/arduino-esp32/package_esp32_index.json";
+// The ESP32 board core every event laptop uses (25 Nov 2026). Older cores are replaced.
+const ESP32_CORE = "3.3.12";
 const WINGET = {
   node: "OpenJS.NodeJS.LTS",
   python: "Python.Python.3.13",
@@ -304,14 +306,17 @@ function arduino() {
   report("ok", "Arduino CLI", "found");
   const opts = { shell: cli === "arduino-cli" };
   const cores = run(cli, ["core", "list"], opts);
-  if (!/esp32:esp32\s+2\.0\.17/.test(cores.stdout || "")) {
-    if (check) return report("fix", "ESP32 board core 2.0.17", "missing: run npm run setup -- --role bridge");
-    console.log("[setup] Installing the ESP32 board core 2.0.17 (large download)…");
+  const installed = /esp32:esp32\s+(\S+)/.exec(cores.stdout || "")?.[1];
+  const label = `ESP32 board core ${ESP32_CORE}`;
+  if (installed !== ESP32_CORE) {
+    const found = installed ? `${installed} is installed` : "missing";
+    if (check) return report("fix", label, `${found}: run npm run setup -- --role bridge`);
+    console.log(`[setup] Installing the ESP32 board core ${ESP32_CORE} (large download)…`);
     run(cli, ["core", "update-index", "--additional-urls", ESP32_INDEX], { ...opts, show: true });
-    if (!ok(run(cli, ["core", "install", "esp32:esp32@2.0.17", "--additional-urls", ESP32_INDEX], { ...opts, show: true })))
-      return report("fix", "ESP32 board core 2.0.17", "install failed (see the output above)");
+    if (!ok(run(cli, ["core", "install", `esp32:esp32@${ESP32_CORE}`, "--additional-urls", ESP32_INDEX], { ...opts, show: true })))
+      return report("fix", label, "install failed (see the output above)");
   }
-  report("ok", "ESP32 board core 2.0.17", "installed");
+  report("ok", label, "installed");
   if (check) return;
   const flasher = existsSync(venvPython) ? venvPython : python?.[0];
   if (!flasher) return report("skip", "Button bridge build", "needs Python");

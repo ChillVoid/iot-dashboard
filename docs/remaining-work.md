@@ -10,6 +10,7 @@ The LED panels failed, so the game migrated to a web game screen on a second lap
 
 **Next, on the organiser (not yet run):**
 
+0. ESP32 core 3.3.12 (25 November): flash the bridge built with 3.3.12 and confirm `READY` and one `PRESS` line per press. If the LED cabinet is used, run its self-test and one connected round on 3.3.12, watching for the TLS-handshake watchdog reset seen with a newer core in Wokwi.
 1. Flash the bridge to the real ESP32 and confirm one `PRESS` line per press (no doubles).
 2. On laptop 2 (Chrome or Edge, tunnel address): pair, Connect button (USB), Full screen; confirm the Machine page on laptop 1 shows Web game screen, ready.
 3. A real phone joins, is called and plays with the arcade button; the phone, Sessions and the leaderboard show the screen's score.

@@ -59,7 +59,7 @@ XAMPP is expected at `C:\xampp`. If yours is elsewhere, set `$env:STACK_XAMPP_DI
 | Check Ollama | operator | Optional |
 | Install Graphify `graphifyy==0.9.109` | developer | `.tools/graphify-py313`; `scripts\graphify.cmd query "..."` works |
 | Check Edge | developer | Needed by the Playwright tests |
-| Install ESP32 core `esp32:esp32@2.0.17`, compile the bridge | bridge | `npm run device:bridge` is ready |
+| Install ESP32 core `esp32:esp32@3.3.12` (replaces older cores), compile the bridge | bridge | `npm run device:bridge` is ready |
 
 **What you configure by hand:**
 - **MySQL root password.** Only if your XAMPP `root` account has one: `$env:STACK_DB_ROOT_PASSWORD = "..."` in the same terminal before `npm run setup`.

@@ -47,7 +47,7 @@ volatile uint32_t buttonEdges=0; // Raw falling edges, including bounce; diagnos
 void IRAM_ATTR buttonISR() {
   portENTER_CRITICAL_ISR(&inputLock);
   if (!buttonEdge) buttonEdge=esp_timer_get_time()/1000ULL;
-  buttonEdges++;
+  buttonEdges=buttonEdges+1;  // no ++ on volatile (deprecated in C++20, core 3.x)
   portEXIT_CRITICAL_ISR(&inputLock);
 }
 uint64_t lastHeartbeat=0, lastPoll=0, nextRequest=0;
@@ -166,7 +166,7 @@ void wifiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
   if (event==ARDUINO_EVENT_WIFI_STA_GOT_IP) {
     lastReason=0;
     Serial.printf("Wi-Fi connected to \"%s\": IP %s, signal %d dBm, channel %d.\n",STACK_WIFI_SSID,
-                  WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.channel());
+                  WiFi.localIP().toString().c_str(),(int)WiFi.RSSI(),(int)WiFi.channel());
   } else if (event==ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
     uint8_t reason=info.wifi_sta_disconnected.reason;
     uint64_t t=esp_timer_get_time()/1000ULL;
@@ -415,7 +415,7 @@ void synchronize() {
   if (heartbeatDue) {
     JsonDocument body;
     body["state"]=(mode==PLAYING||mode==COUNTDOWN)?"playing":(mode==WAITING||mode==ARMED||mode==RESULT)?"ready":"offline";
-    body["firmware"]="matrix-v1-journal-0.1"; body["rssi"]=WiFi.RSSI();
+    body["firmware"]="matrix-v1-journal-0.1"; body["rssi"]=(int)WiFi.RSSI();
     request("heartbeat","/api/device/heartbeat",body.as<JsonVariantConst>()); lastHeartbeat=uptime(); pollAfterHeartbeat=true; return;
   }
 }

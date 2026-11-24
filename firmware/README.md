@@ -33,6 +33,8 @@ The laptop powers everything over USB, so `STACK_LED_BUDGET_MA` in `display_layo
 
 ## Building and flashing
 
+**Toolchain (25 November 2026):** ESP32 Arduino core **3.3.12** (all event laptops; it replaces 2.0.17), its bundled esptool 5.3.1, Arduino CLI 1.6.0, Adafruit NeoPixel 1.15.5 and ArduinoJson 7.4.3. The button bridge, the LED game firmware and its self-test compile on 3.3.12 with no warnings in our code. The flashing and Wokwi scripts pick esptool's command names by version (hyphenated for esptool 5, underscores for older cores), so a laptop still on 2.0.17 also works. `npm run setup -- --role bridge` installs this core.
+
 The scripts use `arduino-cli` with the ESP32 core, Adafruit NeoPixel and ArduinoJson. From the project root:
 
 | Command | What it does |

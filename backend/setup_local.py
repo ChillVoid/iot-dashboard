@@ -10,7 +10,7 @@ from datetime import timedelta
 import pymysql
 from app.config import Settings
 from app.database import make_engine, execute, one
-from app.game import RULES, RULES_HASH, MATRIX_RULES, rules_hash, canonical
+from app.game import RULES, RULES_HASH, MATRIX_RULES, MATRIX_V2_RULES, rules_hash, canonical
 from app.security import passwords, digest, now
 
 ROOT = Path(__file__).parent
@@ -43,6 +43,7 @@ def seed(engine, settings, password):
         execute(c, "INSERT INTO events(id,public_id,code,name,status,starts_at,ends_at,settings) VALUES(1,:uuid,'acs-day','ACS Carnival','open',:start,:end,:settings)", uuid=str(uuid.uuid4()), start=now(), end=now()+timedelta(days=30), settings='{}')
         execute(c, "INSERT INTO rulesets(id,code,version,config,config_hash,created_by) VALUES(1,'classic-v1',1,:config,:hash,:staff)", config=canonical(RULES), hash=RULES_HASH, staff=staff)
         execute(c, "INSERT INTO rulesets(code,version,config,config_hash,created_by) VALUES('matrix-v1',1,:config,:hash,:staff)", config=canonical(MATRIX_RULES), hash=rules_hash(MATRIX_RULES), staff=staff)
+        execute(c, "INSERT INTO rulesets(code,version,config,config_hash,created_by) VALUES('matrix-v2',1,:config,:hash,:staff)", config=canonical(MATRIX_V2_RULES), hash=rules_hash(MATRIX_V2_RULES), staff=staff)
         execute(c, "INSERT INTO machines(id,public_id,event_id,code,name,device_token_hash,observed_state) VALUES(1,:uuid,1,'cabinet-01','Cabinet 01',:hash,'offline')", uuid=str(uuid.uuid4()), hash=digest(settings.device_token))
         execute(c, "INSERT INTO qr_links(token,event_id,machine_id) VALUES(:token,1,1)", token=secrets.token_urlsafe(32))
     return True
@@ -74,5 +75,7 @@ if __name__ == '__main__':
     if seed(make_engine(settings.database_url), settings, admin_password):
         (ROOT / '.admin-credentials.txt').write_text(f'Stack Moko Baby local administrator\nUsername: admin\nPassword: {admin_password}\n\nKeep this file private. It is excluded from Git and Graphify.\n', encoding='utf-8')
     with make_engine(settings.database_url).begin() as c:
-        execute(c,"UPDATE events SET settings=JSON_SET(settings,'$.active_ruleset','matrix-v1') WHERE code='acs-day'")
+        # A fresh install plays Matrix v2 on the web game screen. Never override a choice made
+        # since (switching to the LED cabinet selects matrix-v1).
+        execute(c,"UPDATE events SET settings=JSON_SET(settings,'$.active_ruleset','matrix-v2') WHERE code='acs-day' AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(settings,'$.active_ruleset')),'classic-v1')='classic-v1'")
     print('Local database migrations applied. Administrator credentials are in backend/.admin-credentials.txt (not printed).')

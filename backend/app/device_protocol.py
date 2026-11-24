@@ -21,7 +21,7 @@ class APIInput(BaseModel):
 
 
 class Placement(APIInput):
-    candidate_x: int = Field(strict=True, ge=0, le=15)
+    candidate_x: int = Field(strict=True, ge=0, le=19)  # widest ruleset: matrix-v2, 20 columns
     candidate_width: int = Field(strict=True, ge=1, le=6)
     overlap_width: int = Field(strict=True, ge=0, le=6)
     locked_at_ms: int = Field(strict=True, ge=30, lt=60000)
@@ -32,7 +32,7 @@ class Result(APIInput):
     rulesHash: str = Field(pattern=r'^[a-f0-9]{64}$')
     outcome: Literal['win', 'loss']
     durationMs: int = Field(strict=True, ge=0, le=60000)
-    placements: list[Placement] = Field(max_length=15)
+    placements: list[Placement] = Field(max_length=17)  # most levels: matrix-v2
 
 
 class BootRegistration(APIInput):

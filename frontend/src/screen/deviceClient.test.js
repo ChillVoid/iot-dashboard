@@ -166,6 +166,6 @@ describe('web screen device client', () => {
     screen.pair(server.token)
     reserve(server)
     server.commands[0].rulesHash = 'a'.repeat(64)
-    await expect(screen.sync('ready')).rejects.toThrow(/Matrix v1/)
+    await expect(screen.sync('ready')).rejects.toThrow(/active game rules/)
   })
 })

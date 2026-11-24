@@ -4,7 +4,7 @@
 // confirms it, so a lost response or a page reload never produces a second, different
 // result. The server replays and times every round exactly as it did for the ESP32.
 
-import { MATRIX_RULES, MATRIX_RULES_HASH } from './engine'
+import { knownRuleset } from './engine'
 
 export const STORAGE_KEY = 'smb.gameScreen.v1'
 export const FIRMWARE = 'web-screen-1'
@@ -19,14 +19,6 @@ export class DeviceError extends Error {
     this.status = status
     this.code = code
   }
-}
-
-function sameRules(rules) {
-  return (
-    rules &&
-    Object.keys(MATRIX_RULES).length === Object.keys(rules).length &&
-    Object.entries(MATRIX_RULES).every(([key, value]) => rules[key] === value)
-  )
 }
 
 export function loadSaved(storage) {
@@ -242,7 +234,13 @@ export class ScreenDevice {
   }
 
   async heartbeat(state) {
-    return this.request('heartbeat', { method: 'POST', body: { state, firmware: FIRMWARE } })
+    const data = await this.request('heartbeat', {
+      method: 'POST',
+      body: { state, firmware: FIRMWARE },
+    })
+    // The active rules, for drawing the idle board; a called round brings its own.
+    if (knownRuleset(data.rules, data.rulesHash)) this.activeRules = data.rules
+    return data
   }
 
   // One sync cycle: register, deliver anything pending, heartbeat, then handle commands.
@@ -272,9 +270,9 @@ export class ScreenDevice {
       let round = this.saved.rounds[command.sessionId]
       if (command.type === 'reserve') {
         if (round && (round.fenced || round.commandId !== command.id)) continue
-        if (command.rulesHash !== MATRIX_RULES_HASH || !sameRules(command.rules)) {
+        if (!knownRuleset(command.rules, command.rulesHash)) {
           throw new DeviceError(
-            'The active game is not Matrix v1. Run the project setup (backend/setup_local.py) on the operator laptop.',
+            'This screen does not know the active game rules. Update the project on both laptops and pair again.',
             0,
             'rules_mismatch',
           )
@@ -285,6 +283,7 @@ export class ScreenDevice {
             sessionId: command.sessionId,
             expectedRevision: command.expectedRevision,
             expiresAt: command.expiresAt,
+            rules: command.rules,
             accepted: false,
             fenced: false,
             roundBootId: null,

@@ -2,7 +2,7 @@
 
 FastAPI service that owns the player queue, staff sessions, validated scores, the cabinet protocol, live updates and the optional Stack Intelligence assistant. It runs on Python 3.13 with SQLAlchemy Core against the local XAMPP MariaDB 10.11 database.
 
-Scope: one event (`acs-day`) and one cabinet (`cabinet-01`), played by one game device at a time: the web game screen (default since 25 November 2026) or the optional LED cabinet; both use the same device protocol. Current rules are **Matrix v1** (16 columns, 15 levels, one point per kept row, 60-second limit; see [`contracts/matrix-v1.rules.json`](../contracts/matrix-v1.rules.json)). Earlier Classic v1 results are kept and ranked separately.
+Scope: one event (`acs-day`) and one cabinet (`cabinet-01`), played by one game device at a time: the web game screen (default since 25 November 2026) or the optional LED cabinet; both use the same device protocol. Current rules: **Matrix v2** on the web game screen (20 columns, 17 levels, 60-second limit, one point per kept row; 90 ms per cell on level 1, 6 ms faster each level, floor 35 ms; migration `008_matrix_v2_rules.sql`). The LED cabinet uses **Matrix v1** (16 columns, 15 levels; see [`contracts/matrix-v1.rules.json`](../contracts/matrix-v1.rules.json)). Pairing a device selects its ruleset. Classic v1, Matrix v1 and Matrix v2 results are kept and ranked separately.
 
 ## Setup
 

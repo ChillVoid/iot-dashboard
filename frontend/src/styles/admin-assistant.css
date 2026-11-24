@@ -524,3 +524,97 @@
     padding: 12px;
   }
 }
+
+/* Docked assistant (design canvas round 2): a round icon bottom-right instead of a bar over
+   the page; the conversation opens as a sheet on the right. The launcher keeps its full
+   accessible name ("Stack Intelligence ...") through visually hidden copy. */
+.admin-assistant {
+  left: auto;
+  right: calc(24px + env(safe-area-inset-right, 0px));
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  transform: none;
+  width: auto;
+}
+.admin-assistant.is-open {
+  width: min(440px, calc(100% - 48px));
+}
+.assistant-launcher {
+  width: 56px;
+  height: 56px;
+  min-height: 56px;
+  padding: 0;
+  border-radius: 50%;
+  justify-content: center;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+  cursor: pointer;
+  transition:
+    transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.assistant-launcher:hover {
+  box-shadow:
+    0 0 0 6px rgb(17 19 19 / 0.08),
+    0 12px 48px #0000001c;
+}
+.assistant-launcher:active {
+  transform: scale(0.92);
+}
+.assistant-launcher .assistant-emblem {
+  background: transparent;
+  color: inherit;
+}
+.assistant-launcher-copy,
+.assistant-launcher-action {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.assistant-panel {
+  height: min(680px, calc(100dvh - 48px - env(safe-area-inset-bottom, 0px)));
+  transform-origin: bottom right;
+}
+.admin-assistant.is-open .assistant-panel {
+  animation: assistant-sheet-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes assistant-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .assistant-launcher {
+    transition: none;
+  }
+  .assistant-launcher:active {
+    transform: none;
+  }
+  .admin-assistant.is-open .assistant-panel {
+    animation: none;
+  }
+}
+@media (max-width: 600px) {
+  .admin-assistant {
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .admin-assistant.is-open {
+    width: calc(100% - 24px);
+  }
+  .assistant-launcher {
+    padding: 0;
+  }
+}
+/* Toasts sit above the docked assistant icon. */
+.admin-frame > .toast {
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}

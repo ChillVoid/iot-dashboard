@@ -10,14 +10,21 @@ import { AssistantProvider } from '../state/AssistantContext'
 import UpdateStatus from './UpdateStatus'
 import { gameLabel } from '../state/game'
 
+// Left rail navigation (design canvas "Stack Moko Baby Admin & Game Screen", round 2/3).
+// Monochrome like before; Font Awesome icons with a text label under each.
 const tabs = [
-  ['overview', 'Overview'],
-  ['analytics', 'Analytics'],
-  ['queue', 'Queue'],
-  ['sessions', 'Sessions'],
-  ['machines', 'Machine'],
-  ['settings', 'Settings'],
+  ['overview', 'Overview', 'gauge-high'],
+  ['analytics', 'Analytics', 'chart-simple'],
+  ['queue', 'Queue', 'list-ol'],
+  ['sessions', 'Sessions', 'clock-rotate-left'],
+  ['machines', 'Machine', 'display'],
+  ['settings', 'Settings', 'gear'],
 ]
+const railLink =
+  'tw:flex tw:w-[72px] tw:flex-col tw:items-center tw:gap-1 tw:rounded-[14px] tw:py-2.5 tw:text-[11px] tw:font-semibold tw:text-muted tw:no-underline tw:motion-safe:transition-[background-color,color,transform] tw:motion-safe:duration-[120ms] tw:motion-safe:ease-snappy tw:motion-safe:active:scale-[0.96] tw:hover:bg-surface-soft tw:hover:text-ink'
+const railActive = 'tw:bg-surface-soft tw:font-bold tw:text-ink'
+const sheetLink =
+  'tw:flex tw:min-h-12 tw:items-center tw:gap-3 tw:rounded-[14px] tw:px-4 tw:text-[15px] tw:font-semibold tw:text-ink tw:no-underline tw:hover:bg-surface-soft'
 export function RegistrationQR() {
   const { qrPath } = useApp()
   const canvas = useRef(null)
@@ -107,70 +114,121 @@ export default function Shell() {
     const t = setTimeout(() => setToast(''), 7000)
     return () => clearTimeout(t)
   }, [toast, setToast])
+  const role = admin.role === 'admin' ? 'Administrator' : 'Operator'
+  const signOut = () => logout().catch((e) => setToast(e.message))
   return (
     <AssistantProvider>
-      <div className="app-shell">
+      <div className="admin-frame tw:min-h-screen tw:lg:pl-[96px]">
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>
-        <header className="app-header">
-          <Logo />
-          <nav
-            className={mobileNav ? 'primary-nav open' : 'primary-nav'}
-            aria-label="Main navigation"
+        <nav
+          aria-label="Main navigation"
+          className="tw:fixed tw:inset-y-0 tw:left-0 tw:z-30 tw:hidden tw:w-[96px] tw:flex-col tw:items-center tw:gap-1.5 tw:border-r tw:border-solid tw:border-line tw:bg-surface tw:py-5 tw:lg:flex"
+        >
+          <Link
+            to="/admin/overview"
+            aria-label="Stack Moko Baby"
+            className="tw:mb-4 tw:grid tw:size-11 tw:place-items-center tw:rounded-[14px] tw:bg-ink tw:text-surface"
           >
-            {tabs.map(([path, label]) => (
-              <NavLink to={`/admin/${path}`} key={path}>
-                {label}
-              </NavLink>
-            ))}
-          </nav>
-          <div className="header-actions">
+            <i className="fa-solid fa-layer-group" aria-hidden="true" />
+          </Link>
+          {tabs.map(([path, label, icon]) => (
+            <NavLink
+              to={`/admin/${path}`}
+              key={path}
+              className={({ isActive }) => `${railLink} ${isActive ? railActive : ''}`}
+            >
+              <i className={`fa-solid fa-${icon} tw:text-[18px]`} aria-hidden="true" />
+              {label}
+            </NavLink>
+          ))}
+          <div className="tw:mt-auto tw:flex tw:flex-col tw:items-center tw:gap-2">
             <ThemeSwitch />
             <span
               className="operator-avatar"
-              title={`${admin.username} · ${admin.role === 'admin' ? 'Administrator' : 'Operator'}`}
-              aria-label={`Signed in as ${admin.username}, ${admin.role === 'admin' ? 'administrator' : 'operator'}`}
+              title={`${admin.username} · ${role}`}
+              aria-label={`Signed in as ${admin.username}, ${role.toLowerCase()}`}
             >
               {admin.role === 'admin' ? 'AD' : 'OP'}
             </span>
-            <IconButton label="Sign out" onClick={() => logout().catch((e) => setToast(e.message))}>
+            <IconButton label="Sign out" onClick={signOut}>
               <i className="fa-solid fa-right-from-bracket" aria-hidden="true" />
             </IconButton>
+          </div>
+        </nav>
+
+        <header className="tw:sticky tw:top-0 tw:z-30 tw:flex tw:h-16 tw:items-center tw:gap-3 tw:border-b tw:border-solid tw:border-line tw:bg-surface tw:px-4 tw:lg:hidden">
+          <Logo />
+          <div className="tw:ml-auto tw:flex tw:items-center tw:gap-2">
+            <ThemeSwitch />
             <IconButton
               label={mobileNav ? 'Close navigation' : 'Open navigation'}
-              className="mobile-menu"
+              aria-expanded={mobileNav}
               onClick={() => setMobileNav(!mobileNav)}
             >
               {mobileNav ? <X size={21} /> : <MenuIcon size={21} />}
             </IconButton>
           </div>
         </header>
-        <div className="scope-bar">
-          <span>
-            <span className="scope-dot" />
-            ACS Carnival
-            <ChevronRight size={13} />
-            <span>{gameLabel(game)}</span>
-          </span>
-          <Badge tone="soft">
-            {machine.health?.source === 'simulator'
-              ? 'Simulator active · no ESP32'
-              : 'Database connected · hardware status below'}
-          </Badge>
+        {mobileNav && (
+          <nav
+            aria-label="Main navigation"
+            className="tw:fixed tw:inset-x-3 tw:top-[68px] tw:z-30 tw:grid tw:gap-1 tw:rounded-[22px] tw:border tw:border-solid tw:border-line tw:bg-surface tw:p-2 tw:shadow-[0_18px_48px_rgba(0,0,0,.14)] tw:lg:hidden tw:origin-top tw:motion-safe:animate-panel-in"
+          >
+            {tabs.map(([path, label, icon]) => (
+              <NavLink
+                to={`/admin/${path}`}
+                key={path}
+                className={({ isActive }) => `${sheetLink} ${isActive ? 'tw:bg-surface-soft' : ''}`}
+              >
+                <i className={`fa-solid fa-${icon} tw:w-5 tw:text-center`} aria-hidden="true" />
+                {label}
+              </NavLink>
+            ))}
+            <button
+              type="button"
+              className={`${sheetLink} tw:w-full tw:cursor-pointer tw:border-0 tw:bg-transparent tw:text-left tw:font-sans`}
+              onClick={signOut}
+            >
+              <i
+                className="fa-solid fa-right-from-bracket tw:w-5 tw:text-center"
+                aria-hidden="true"
+              />
+              Sign out ({admin.username})
+            </button>
+          </nav>
+        )}
+
+        <div className="tw:mx-auto tw:w-full tw:max-w-[1440px] tw:px-4 tw:pb-16 tw:sm:px-6 tw:lg:px-10">
+          <div className="scope-bar">
+            <span>
+              <span className="scope-dot" />
+              ACS Carnival
+              <ChevronRight size={13} />
+              <span>{gameLabel(game)}</span>
+            </span>
+            <Badge tone="soft">
+              {machine.health?.source === 'simulator'
+                ? 'Simulator active'
+                : (machine.firmware || '').startsWith('web-screen')
+                  ? 'Web game screen'
+                  : 'Database connected'}
+            </Badge>
+          </div>
+          <main
+            id="main-content"
+            key={pathname}
+            className="main-content tw:motion-safe:animate-fade-in"
+          >
+            <Outlet />
+          </main>
+          <footer className="app-footer">
+            <Logo compact />
+            <span>Stack Moko Baby · Event operations</span>
+            <UpdateStatus />
+          </footer>
         </div>
-        <main
-          id="main-content"
-          key={pathname}
-          className="main-content tw:motion-safe:animate-fade-in"
-        >
-          <Outlet />
-        </main>
-        <footer className="app-footer">
-          <Logo compact />
-          <span>Stack Moko Baby · Event operations</span>
-          <UpdateStatus />
-        </footer>
         <AdminAssistant onReviewPage={pathname === '/admin/question-review'} />
         {toast && (
           <div key={toast} className="toast tw:motion-safe:animate-toast-in" role="status">

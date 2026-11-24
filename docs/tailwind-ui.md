@@ -44,6 +44,13 @@ Tokens in `tailwind.css` `@theme` (design canvas "Stack Moko Baby Motion System"
 
 Sources used: [Colorado DCS motion tokens](https://dcs.colorado.gov/ids/digital-guidelines/design-tokens/motion-interaction), [U-M Library motion](https://design-system.lib.umich.edu/visual-elements/motion), [Toyota CDS animations](https://dx-playbook.toyota-europe.com/cds/foundations/animations/), [Smashing: accessible UI animations](https://smashingmagazine.com/2023/11/creating-accessible-ui-animations), [Tailwind theme variables](https://tailwindcss.com/docs/theme).
 
+## Admin and game screen, design v2 (25 November)
+
+- **Admin** keeps the monochrome look. Navigation moved to a left rail (icons with labels; a compact top bar with "Open navigation" on phones). Overview became **Control**: a status strip with the black **Call next player** button, the line, Now playing and Today above the existing charts and rankings.
+- **Stack Intelligence** is a round icon at the bottom right that opens the conversation as a sheet; it no longer covers the page.
+- **Press feedback:** `Button` adds a ripple from the press point (`animate-ripple`, 520 ms) on top of the 0.97 press scale; both are off with reduced motion. Toasts sit above the assistant icon.
+- **Game screen** tokens: `animate-breathe` (PRESS button). Canvas effects live in `src/screen/vfx.js` (see [game-screen.md](game-screen.md)).
+
 ## Visual regression check
 
 `frontend/e2e/visual.spec.js` captures 39 full-page screenshots (player pages at desktop and phone size; admin pages in light, dark and phone) from a throwaway database, with animations frozen. It runs only when `VISUAL_LABEL` is set:

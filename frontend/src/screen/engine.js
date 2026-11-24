@@ -1,7 +1,9 @@
-// Matrix v1 stacking engine for the web game screen.
-// An exact port of firmware/stack_moko_baby/game_engine.h: the backend replays
-// every placement (backend/app/game.py replay()), so any change here must keep
-// contracts/matrix-v1.vectors.json passing in both test suites.
+// Matrix stacking engine for the web game screen, driven by the round's ruleset.
+// Matrix v1 is an exact port of firmware/stack_moko_baby/game_engine.h; Matrix v2 (the web
+// screen's ruleset since 25 Nov 2026) uses the same algorithm with a wider, taller board and
+// a steeper speed ramp. The backend replays every placement (backend/app/game.py replay()),
+// so any change here must keep contracts/matrix-v1.vectors.json and matrix-v2.vectors.json
+// passing in both test suites.
 
 export const MATRIX_RULES = Object.freeze({
   code: 'matrix-v1',
@@ -19,6 +21,40 @@ export const MATRIX_RULES = Object.freeze({
 
 // sha256 of the canonical (sorted-key, compact) rules JSON; matches the server.
 export const MATRIX_RULES_HASH = 'f73ce2ee4d1f607b6ea97038a534c7521a9305ee9ada3e2d418029cf866a58a4'
+
+// Matrix v2: 20 columns, 17 levels (18 rows with the foundation), 6-cell start at column 7,
+// 90 ms per cell on level 1, 6 ms faster each level, never faster than 35 ms.
+export const MATRIX_V2_RULES = Object.freeze({
+  code: 'matrix-v2',
+  columns: 20,
+  levels: 17,
+  initial_width: 6,
+  foundation_x: 7,
+  round_limit_ms: 60000,
+  base_step_ms: 90,
+  step_decrease_ms: 6,
+  minimum_step_ms: 35,
+  row_points: 1,
+  perfect_bonus: 0,
+})
+export const MATRIX_V2_RULES_HASH =
+  'b2ec6a7cdc7dfb10afb092b46cb6e8e4725c16b0f1e693e2a2dac7ea10390d27'
+
+// Rulesets this screen can play, by code, with the server's hash of each.
+export const RULESETS = Object.freeze({
+  'matrix-v1': { rules: MATRIX_RULES, hash: MATRIX_RULES_HASH },
+  'matrix-v2': { rules: MATRIX_V2_RULES, hash: MATRIX_V2_RULES_HASH },
+})
+
+// The known ruleset these server rules and hash describe, or null.
+export function knownRuleset(rules, hash) {
+  const known = rules && RULESETS[rules.code]
+  if (!known || known.hash !== hash) return null
+  const same =
+    Object.keys(known.rules).length === Object.keys(rules).length &&
+    Object.entries(known.rules).every(([key, value]) => rules[key] === value)
+  return same ? known : null
+}
 
 export const COUNTDOWN_STEP_MS = 500
 export const COUNTDOWN_MS = 3 * COUNTDOWN_STEP_MS
@@ -91,7 +127,7 @@ export function press(round, elapsed) {
 }
 
 // The terminal payload the device journal sends (device_protocol.Result).
-export function toResult(round, terminalId, rulesHash = MATRIX_RULES_HASH) {
+export function toResult(round, terminalId, rulesHash = RULESETS[round.rules.code]?.hash) {
   if (!round.ended) throw new Error('The round has not ended.')
   return {
     terminalId,

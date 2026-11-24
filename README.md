@@ -10,7 +10,7 @@
 ![MariaDB](https://img.shields.io/badge/XAMPP-MariaDB_10.11-fb7a24?logo=mariadb&logoColor=white)
 ![ESP32](https://img.shields.io/badge/ESP32-Arduino-e7352c?logo=espressif&logoColor=white)
 
-Players scan a QR code with their own phone, register with a nickname and student ID, and wait in a first-come, first-served line. When the cabinet is free, an operator calls the next player. That player presses the big arcade button to drop each moving row onto the stack on the **game screen**: 15 levels, 60 seconds, one point per level. The result appears on their phone and unlocks the leaderboard.
+Players scan a QR code with their own phone, register with a nickname and student ID, and wait in a first-come, first-served line. When the cabinet is free, an operator calls the next player. That player presses the big arcade button to drop each moving row onto the stack on the **game screen**: 17 levels on a 20-wide board, 60 seconds, one point per level, with the row speeding up every level (Matrix v2). The result appears on their phone and unlocks the leaderboard.
 
 **Web game screen (since 25 November 2026):** the game migrated from the LED-matrix cabinet to a full-screen web page on a second laptop. The arcade button reaches it through an ESP32 **button bridge** over USB (Web Serial), and the ESP32 timestamps each press, so button timing never waits for the network. The **server owns the queue** and saves a score only after replaying the game's placement record. The **LED cabinet stays supported**: same device protocol, rules and leaderboard, switched in Settings → Game screen. See [the web game screen](docs/game-screen.md).
 

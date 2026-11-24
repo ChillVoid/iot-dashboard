@@ -5,7 +5,10 @@ import { MemoryRouter } from 'react-router-dom'
 import Overview from './Overview'
 
 vi.mock('../components/charts', () => ({ ActivityChart: () => null, LevelChart: () => null }))
-vi.mock('../components/LiveRound', () => ({ default: () => null }))
+vi.mock('../components/LiveRound', () => ({
+  default: () => null,
+  stateLabels: { ready: 'Ready', offline: 'Offline' },
+}))
 vi.mock('../components/Shell', () => ({ RegistrationQR: () => null }))
 vi.mock('../state/AppContext', () => ({
   useApp: () => ({

@@ -4,7 +4,11 @@
 
 **Current connection blocker:** actual browser testing loaded the private firmware. Core 4.0.0 hit the TLS watchdog; the compatibility build and network scheduling/reuse fixes compile and boot, but Wokwi repeatedly fails to connect to `wss://netwi.wokwi.com/`. No authenticated fresh heartbeat or connected round was observed. Retest when the public gateway connects; the dashboard remains online. See [evidence and retry instructions](free-online.md).
 
-## Display migration: web game screen — 25 November 2026 (latest)
+## Admin and game screen design v2 — 25 November 2026 (latest)
+
+Built from the design canvas "Stack Moko Baby Admin & Game Screen": a monochrome admin with a left rail, a Control overview (status strip + Call next player), a docked Stack Intelligence icon and press ripples; and a full-bleed game screen with HUD chips, an Operator icon instead of the side panel, and canvas effects (perfect-drop ripple rings, combo labels, falling chips, sparkles, a win shockwave), all reduced for reduced motion. Unit and browser suites pass, including the accessibility scan of every admin page in light and dark and phone navigation at 360 px. **Not yet seen on the real screen laptop:** check that the effects keep 60 fps on that laptop and that the HUD reads from the player's distance.
+
+## Display migration: web game screen — 25 November 2026
 
 The LED panels failed, so the game migrated to a web game screen on a second laptop, played with the arcade button through an ESP32 USB button bridge; the LED cabinet stays supported and can be switched back in Settings → Game screen. See [game-screen.md](game-screen.md). Built and tested in software: the Matrix v1 engine port (18 shared vectors, also replayed by the server), the browser device-journal client, Web Serial input, pairing and switching back (administrator-only, audited, refused during a round), the `/screen` page, and a browser journey that pairs, plays a round whose score matches the player's ticket, and holds a round interrupted by a reload. The bridge sketch compiles.
 

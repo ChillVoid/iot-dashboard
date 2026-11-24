@@ -6,5 +6,5 @@ export const CLASSIC_GAME = {
   perfect_bonus: 25,
   round_limit_ms: 60000,
 }
-export const gameLabel = (game = CLASSIC_GAME) =>
-  game.code === 'matrix-v1' ? 'Matrix v1' : 'Classic v1'
+const LABELS = { 'classic-v1': 'Classic v1', 'matrix-v1': 'Matrix v1', 'matrix-v2': 'Matrix v2' }
+export const gameLabel = (game = CLASSIC_GAME) => LABELS[game.code] || game.code

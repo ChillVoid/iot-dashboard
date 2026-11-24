@@ -57,12 +57,25 @@ With the web screen, no LED panels, display power lead, capacitor, 330 Ω resist
 
 A new tunnel address is a different website to the browser. It brings new storage and a new serial permission, so pair again and connect the button again. Pairing is refused while a player is called or playing, and it cuts off any other screen and the LED cabinet until you switch back.
 
+## Rules: Matrix v2 (25 November)
+
+The web game screen plays **a board 20 columns wide and 18 rows tall (foundation + 17 levels), a 6-cell start centred at column 7, 60 seconds, one point per level (maximum 17); the row moves one cell every 90 ms on level 1 and 6 ms faster on each level, never faster than 35 ms**.
+
+| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10–17 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ms per cell | 90 | 84 | 78 | 72 | 66 | 60 | 54 | 48 | 42 | 36, then 35 |
+
+- **Pairing selects the ruleset.** Pairing a web screen makes `matrix-v2` active; *Use the LED cabinet instead* makes `matrix-v1` active, because the LED firmware is built for it. A round keeps the ruleset it was called with.
+- **Rankings stay separate.** Matrix v1 scores (out of 15) and Matrix v2 scores (out of 17) are ranked separately, as Classic v1 already was.
+- **Apply it on the operator laptop:** `npm run setup` (or `backend/setup_local.py`) applies migration `008_matrix_v2_rules.sql`. Until then the API reports the setup as incomplete.
+- **Tests:** `contracts/matrix-v2.vectors.json` holds 18 press-time vectors from an independent Python port. The server's `replay()` and the browser engine must both match them.
+
 ## How a round works
 
 1. **Idle.** The screen sends a heartbeat (`ready`, firmware `web-screen-1`) and polls commands every second. Laptop 1's Machine page shows "Web game screen".
 2. **Call next.** The operator calls the next player, and a reserve command arrives. The screen checks the Matrix v1 rules hash, saves the reservation, journals `reserved`, and shows *Your turn! Press the button to start* with the 3-minute limit.
 3. **Start.** A press starts the 3-2-1 countdown (500 ms steps). When it ends, the start marker is saved, then journaled as `started`.
-4. **Play.** Each press is timed from the ESP32's edge time, mapped to page time with the lowest-delay offset seen. It runs through `frontend/src/screen/engine.js`, an exact port of `game_engine.h`. The round ends on a full miss, at 15 levels, or after 60 s.
+4. **Play.** Each press is timed from the ESP32's edge time, mapped to page time with the lowest-delay offset seen. It runs through `frontend/src/screen/engine.js` with the round's ruleset. The round ends on a full miss, at the last level, or after 60 s.
 5. **Result.** The result is saved in the browser, then journaled as `terminal`. The server replays it and stores the score. The screen shows *Score saved to the leaderboard* for 8 s.
 
 **Saved before sent.** Every journal event is stored in `localStorage` before it is sent, and resent unchanged until the server confirms it. A lost response or a server outage never creates a second, different result.
@@ -71,10 +84,27 @@ A new tunnel address is a different website to the browser. It brings new storag
 
 **One tab only.** Only one game screen tab can run per browser (Web Locks), because two tabs would race the same journal.
 
+## Look and effects (design v2, 25 November)
+
+Built from the design canvas "Stack Moko Baby Admin & Game Screen" (design system, three rounds of variations and critique, a playable effects prototype).
+
+- **Full-bleed board.** The old side panel is gone. Score and time sit in small HUD chips over the board during a round.
+- **Operator icon.** One icon at the top right opens the operator sheet: server and button status, Full screen, Connect/Reconnect button (USB), Keyboard fallback, Sound, Unpair. Its dot is lime when the server and an input (button or keyboard) are ready, dim otherwise. While the keyboard fallback is on, a small "Keyboard fallback on (Space)" chip stays on screen as a reminder.
+- **States.** Waiting ("Scan the QR to join the line", line size and best score), Player called (a breathing PRESS button and "Your turn! Press the button."), 3-2-1 countdown, Playing, and the result card (YOU WIN! / GAME OVER, final score, perfect drops, save status).
+- **Effects** (`frontend/src/screen/vfx.js`, drawn after the game step, never touching timing or the trace):
+  - perfect drop: white ripple rings (more as the combo grows) and one "PERFECT ×N" label above the next lane;
+  - cut: the lost overhang breaks into chips that fall with gravity;
+  - miss: a short screen shake and a faint Cloud flash;
+  - win: two lime shockwaves and confetti;
+  - always: ambient sparkles that grow denser with the score.
+- **Reduced motion** (the laptop's setting): rings show as one outline, labels appear without the pop, and there are no chips, confetti or shake. Particles are capped at 240.
+- **Three colours only**: Ink, Lime and Cloud.
+
 ## Fallbacks and fixes
 
 | Screen shows | Do |
 |---|---|
+| Operator icon dot is dim | Open it: the sheet says whether the server or the button is missing. |
 | Button not connected / unplugged | Operator → Connect button (USB). Replug the cable. Close any serial monitor. |
 | No Web Serial: use Chrome or Edge | Use Chrome or Edge at the https tunnel address, not `http://<ip>`. |
 | This laptop is not the game screen yet | Pair again (the tunnel address changed, or another screen was paired). |

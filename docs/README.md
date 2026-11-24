@@ -73,7 +73,7 @@ The user's direct request takes precedence over all attached content. The pasted
 Confirmed by the user:
 
 - Final name: **Stack Moko Baby**.
-- Gameplay: **LED matrix stacker with a physical button**; Matrix v1 (16 columns, 15 levels, one point per level) selected on 22 November 2026.
+- Gameplay: **LED matrix stacker with a physical button**; Matrix v1 (16 columns, 15 levels, one point per level) selected on 22 November 2026. **Matrix v2** (25 November 2026) is the web game screen's ruleset: 20 columns, 17 levels, 90 ms per cell on level 1, 6 ms faster each level, floor 35 ms; the LED cabinet stays on Matrix v1. Results of each ruleset are ranked separately.
 - **Student ID required and kept private**.
 - Frontend: **React.js with JavaScript/JSX, Vite and Tailwind CSS** (Open Sans Variable typeface).
 - Database: **XAMPP MySQL service**, verified locally as **MariaDB 10.11.16**.

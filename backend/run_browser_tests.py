@@ -50,10 +50,10 @@ def main(arguments):
         url=URL.create('mysql+pymysql',username='root',password=os.getenv('STACK_DB_ROOT_PASSWORD',''),host='127.0.0.1',database=database).render_as_string(hide_password=False)
         settings=Settings(database_url=url,identity_key=secrets.token_bytes(32),lookup_key=secrets.token_bytes(32),csrf_key=secrets.token_bytes(32),device_token='disposable-browser-device-token',public_url='http://127.0.0.1:5174')
         engine=make_engine(url);seed(engine,settings,password)
-        if os.getenv('STACK_TEST_RULESET')=='matrix-v1':
+        if os.getenv('STACK_TEST_RULESET') in ('matrix-v1','matrix-v2'):
             from app.database import execute
             with engine.begin() as c:
-                execute(c,"UPDATE events SET settings=JSON_SET(settings,'$.active_ruleset','matrix-v1') WHERE code='acs-day'")
+                execute(c,"UPDATE events SET settings=JSON_SET(settings,'$.active_ruleset',:code) WHERE code='acs-day'",code=os.getenv('STACK_TEST_RULESET'))
         engine.dispose()
         env=dict(os.environ,STACK_DATABASE_URL=url,STACK_PUBLIC_URL=settings.public_url,STACK_API_TARGET='http://127.0.0.1:8001',STACK_TEST_URL=settings.public_url,STACK_TEST_PASSWORD=password)
         env.update({f'STACK_{name}_KEY':base64.urlsafe_b64encode(value).decode() for name,value in [('IDENTITY',settings.identity_key),('LOOKUP',settings.lookup_key),('CSRF',settings.csrf_key)]})

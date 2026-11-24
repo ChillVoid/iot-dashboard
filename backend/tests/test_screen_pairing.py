@@ -12,7 +12,8 @@ from app.database import execute, one
 from test_player_flow import environment, join, post  # noqa: F401
 from test_staff_roles import add_operator, sign_in
 
-VECTORS = json.loads((Path(__file__).resolve().parents[2] / 'contracts' / 'matrix-v1.vectors.json').read_text(encoding='utf-8'))
+# Pairing a web game screen makes Matrix v2 active, so its rounds use the v2 vectors.
+VECTORS = json.loads((Path(__file__).resolve().parents[2] / 'contracts' / 'matrix-v2.vectors.json').read_text(encoding='utf-8'))
 
 
 def uid():
@@ -65,6 +66,7 @@ def test_screen_plays_a_ranked_round_and_pairing_waits_for_it(environment):
     app, admin, token, engine, settings = environment
     matrix(engine)
     device, registration = screen(app, pair(admin))
+    assert admin.get('/api/admin/snapshot').json()['game']['code'] == 'matrix-v2'
     player = join(app, token, 1)
     assert device.post('/api/device/heartbeat', json={'state': 'ready', 'firmware': 'web-screen-1'}).status_code == 200
     session = post(admin, '/api/admin/queue/call-next').json()['sessionId']
@@ -109,6 +111,8 @@ def test_switching_back_to_the_led_cabinet_restores_its_configured_token(environ
     assert response.status_code == 200 and response.json() == {'ok': True}
     assert settings.device_token not in response.text
     assert led.get('/api/device/enrollment').status_code == 200
+    # The LED firmware is built for Matrix v1, so switching back makes it the active ruleset.
+    assert admin.get('/api/admin/snapshot').json()['game']['code'] == 'matrix-v1'
     assert TestClient(app, headers={'X-Device-Token': screen_token}).get('/api/device/enrollment').status_code == 401
     with engine.connect() as c:
         assert one(c, "SELECT COUNT(*) AS n FROM audit_logs WHERE action='led_cabinet_restored'")['n'] == 1

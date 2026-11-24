@@ -9,7 +9,14 @@ RULES = {'code': 'classic-v1', 'columns': 8, 'levels': 12, 'initial_width': 3,
 MATRIX_RULES = {'code': 'matrix-v1', 'columns': 16, 'levels': 15, 'initial_width': 6,
                 'foundation_x': 5, 'round_limit_ms': 60000, 'base_step_ms': 60,
                 'step_decrease_ms': 10, 'minimum_step_ms': 50, 'row_points': 1, 'perfect_bonus': 0}
-RULESETS = {r['code']: r for r in (RULES, MATRIX_RULES)}
+# Matrix v2 (25 Nov 2026, web game screen): a 20-wide, 18-tall board (foundation + 17 levels)
+# and a steep speed ramp: 90 ms per cell on level 1, 6 ms faster each level, floor 35 ms.
+MATRIX_V2_RULES = {'code': 'matrix-v2', 'columns': 20, 'levels': 17, 'initial_width': 6,
+                   'foundation_x': 7, 'round_limit_ms': 60000, 'base_step_ms': 90,
+                   'step_decrease_ms': 6, 'minimum_step_ms': 35, 'row_points': 1, 'perfect_bonus': 0}
+RULESETS = {r['code']: r for r in (RULES, MATRIX_RULES, MATRIX_V2_RULES)}
+# The ruleset each game device plays: the web screen uses v2, the LED firmware is built for v1.
+DEVICE_RULESETS = {'screen': 'matrix-v2', 'led': 'matrix-v1'}
 
 
 def canonical(value):

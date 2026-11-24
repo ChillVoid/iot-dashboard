@@ -33,7 +33,7 @@ from .machine_status import cabinet_state
 from .device_commands import CommandAcknowledgement, poll_commands, acknowledge, requires_review, hold_for_review
 from .device_protocol import APIInput, Placement, Result, BootRegistration, JournalEvent, RecoveryReason, RecoveryResolution
 from .device_recovery import require_boot, register_boot, journal, request_fence, recovery_view, resolve
-from .game import active_rules, stored_rules, rules_hash, canonical, replay, simulated_result
+from .game import active_rules, stored_rules, rules_hash, canonical, replay, simulated_result, DEVICE_RULESETS
 from .security import passwords, DUMMY_HASH, now, digest, csrf_for, verify_csrf, identity_lookup, encrypt_identity, set_cookie
 
 
@@ -729,7 +729,7 @@ def create_app(settings=None):
             record_change(c,'session.changed',public)
         return result
 
-    def switch_game_device(request,token,action,message):
+    def switch_game_device(request,token,action,message,device_kind):
         # Cabinet 01 is played by one device at a time: the web game screen (default since
         # 25 Nov 2026) or the LED cabinet. Switching replaces the device token, so the other one stops.
         with engine.begin() as c:
@@ -737,6 +737,10 @@ def create_app(settings=None):
             if g and g['status'] in ('reserved','countdown','playing','awaiting_result'):
                 raise HTTPException(409,message)
             execute(c,"UPDATE machines SET device_token_hash=:hash,observed_state='offline',last_seen_at=NULL WHERE id=:id",hash=digest(token),id=m['id'])
+            # Each device plays its own ruleset (web screen: Matrix v2, LED firmware: Matrix v1).
+            # Only new assignments use it; saved rounds keep the ruleset they were played under.
+            stored_rules(c,code=DEVICE_RULESETS[device_kind])
+            execute(c,"UPDATE events SET settings=JSON_SET(COALESCE(settings,'{}'),'$.active_ruleset',:code),revision=revision+1 WHERE id=1",code=DEVICE_RULESETS[device_kind])
             record_change(c,'machine.changed')
             audit(c,p['staff_user_id'],action,m['public_id'],entity_type='machine')
 
@@ -744,14 +748,14 @@ def create_app(settings=None):
     def pair_screen(request:Request):
         # A fresh device token for this browser only, returned once.
         token=secrets.token_urlsafe(32)
-        switch_game_device(request,token,'screen_paired','Finish the current round before pairing a game screen.')
+        switch_game_device(request,token,'screen_paired','Finish the current round before pairing a game screen.','screen')
         return JSONResponse({'ok':True,'deviceToken':token},headers={'Cache-Control':'no-store'})
 
     @app.post('/api/admin/screen/use-led-cabinet')
     def use_led_cabinet(request:Request):
         # Back to the LED cabinet: restore the configured STACK_DEVICE_TOKEN (the one the launcher
         # builds into the private firmware config.h). Any paired game screen stops working.
-        switch_game_device(request,settings.device_token,'led_cabinet_restored','Finish the current round before switching to the LED cabinet.')
+        switch_game_device(request,settings.device_token,'led_cabinet_restored','Finish the current round before switching to the LED cabinet.','led')
         return {'ok':True}
 
     def device(c,request,lock=True,boot_check=True):

@@ -61,12 +61,14 @@ test('the web game screen pairs, plays a ranked round with the keyboard fallback
   await page.getByRole('button', { name: 'Use this laptop as the game screen' }).click()
   await page.getByRole('button', { name: 'Pair and open the game screen' }).click()
   await expect(page).toHaveURL(/\/screen$/)
+  // Status lives in the Operator sheet now (the side panel became an icon).
+  await expect(page.getByText('Waiting for the next player')).toBeVisible({ timeout: 15000 })
+  await page.getByRole('button', { name: /Operator menu/ }).click()
   await expect(page.getByText('Server connected')).toBeVisible({ timeout: 15000 })
-  await expect(page.getByText('Waiting for the next player')).toBeVisible()
-  await page.getByRole('button', { name: 'Operator' }).click()
   await page.getByRole('button', { name: /Keyboard fallback/ }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: 'Operator' })).toHaveCount(0)
   await expect(page.getByText('Keyboard fallback on (Space)')).toBeVisible()
-  await page.getByRole('button', { name: 'Operator' }).click()
   await shot(page, 'screen-waiting')
 
   const first = await register(browser, qrImage, 'Screen Tester', 'SYNTHETIC-SCREEN-01')
@@ -74,7 +76,7 @@ test('the web game screen pairs, plays a ranked round with the keyboard fallback
     (await (await page.request.get('/api/admin/snapshot')).json()).machineState
   await expect.poll(async () => await machine(), { timeout: 15000 }).toBe('ready')
   expect((await callNext()).status()).toBe(200)
-  await expect(page.getByText('Your turn! Press the button to start.')).toBeVisible({
+  await expect(page.getByText('Your turn! Press the button.')).toBeVisible({
     timeout: 15000,
   })
   await shot(page, 'screen-called')
@@ -92,7 +94,7 @@ test('the web game screen pairs, plays a ranked round with the keyboard fallback
   await expect(page.getByText(/YOU WIN!|GAME OVER/)).toBeVisible({ timeout: 65000 })
   await expect(page.getByText('Score saved to the leaderboard.')).toBeVisible({ timeout: 15000 })
   await shot(page, 'screen-result')
-  const shown = Number((await page.getByText(/^Score \d+$/).textContent()).replace('Score ', ''))
+  const shown = Number(await page.getByTestId('final-score').textContent())
   await expect
     .poll(async () => (await (await first.player.request.get('/api/player/context')).json()).ticket)
     .toMatchObject({ status: 'completed', score: shown })
@@ -103,7 +105,7 @@ test('the web game screen pairs, plays a ranked round with the keyboard fallback
   await expect(page.getByText('Waiting for the next player')).toBeVisible({ timeout: 15000 })
   await expect.poll(async () => await machine(), { timeout: 15000 }).toBe('ready')
   expect((await callNext()).status()).toBe(200)
-  await expect(page.getByText('Your turn! Press the button to start.')).toBeVisible({
+  await expect(page.getByText('Your turn! Press the button.')).toBeVisible({
     timeout: 15000,
   })
   await page.keyboard.press('Space')

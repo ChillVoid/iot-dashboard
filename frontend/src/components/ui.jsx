@@ -84,11 +84,30 @@ export function RoundLink({ to, label }) {
     </Link>
   )
 }
-export function Button({ children, tone = 'dark', className = '', ...props }) {
+// A ripple from the press point (design canvas: 520 ms, 25% of the text colour). It is added
+// outside React's children so it never disturbs rendering, and skipped for reduced motion.
+export function pressRipple(event) {
+  const button = event.currentTarget
+  if (button.disabled || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+  const box = button.getBoundingClientRect()
+  const size = Math.max(box.width, box.height)
+  const ripple = document.createElement('span')
+  ripple.setAttribute('aria-hidden', 'true')
+  ripple.className =
+    'tw:pointer-events-none tw:absolute tw:rounded-full tw:bg-current tw:opacity-25 tw:animate-ripple'
+  ripple.style.cssText = `width:${size}px;height:${size}px;left:${event.clientX - box.left - size / 2}px;top:${event.clientY - box.top - size / 2}px`
+  ripple.addEventListener('animationend', () => ripple.remove(), { once: true })
+  button.appendChild(ripple)
+}
+export function Button({ children, tone = 'dark', className = '', onPointerDown, ...props }) {
   return (
     <button
       type="button"
-      className={`button ${tone} tw:inline-flex tw:items-center tw:justify-center tw:font-sans tw:disabled:cursor-not-allowed tw:motion-safe:transition-[transform,background-color,color,box-shadow] tw:motion-safe:duration-[120ms] tw:motion-safe:ease-snappy tw:motion-safe:enabled:active:scale-[0.98] ${className}`}
+      className={`button ${tone} tw:relative tw:overflow-hidden tw:inline-flex tw:items-center tw:justify-center tw:font-sans tw:disabled:cursor-not-allowed tw:motion-safe:transition-[transform,background-color,color,box-shadow] tw:motion-safe:duration-[120ms] tw:motion-safe:ease-snappy tw:motion-safe:enabled:active:scale-[0.97] ${className}`}
+      onPointerDown={(event) => {
+        pressRipple(event)
+        onPointerDown?.(event)
+      }}
       {...props}
     >
       {children}
@@ -108,7 +127,9 @@ export function PageHeading({
         <h1>{title}</h1>
         {description && <p>{description}</p>}
       </div>
-      <div className="page-actions tw:flex tw:shrink-0 tw:items-center">{children}</div>
+      <div className="page-actions tw:flex tw:max-w-full tw:flex-wrap tw:items-center">
+        {children}
+      </div>
     </div>
   )
 }

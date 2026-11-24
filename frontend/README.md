@@ -61,7 +61,8 @@ src/
                        PlayerAssistant (player Stack Intelligence),
                        AdminAssistant, charts, icons (Font Awesome)
   screen/              web game screen: engine.js (Matrix v1 port), deviceClient.js (protocol-v2
-                       journal), button.js (Web Serial), sound.js
+                       journal), button.js (Web Serial), sound.js, vfx.js (ripple rings, chips,
+                       sparkles, shockwave)
   state/               AppContext (session, snapshot, actions), api.js (fetch + CSRF),
                        useLiveUpdates (WebSocket hints with polling fallback),
                        AssistantContext, qr-entry, game
